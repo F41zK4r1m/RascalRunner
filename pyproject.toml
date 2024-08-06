@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rascalrunner"
+version = "0.0.1"
+authors = [
+  { name="nopcorn", email="lol@example.com" },
+]
+description = "Run malicious Github workflows in order to dump secrets, deploy agents, and profit"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX",
+]
+
+[project.urls]
+Homepage = "https://github.com/nopcorn/rascalrunner"
+Issues = "https://github.com/nopcorn/rascalrunner/issues"
+
+[project.scripts]
+rascalrunner = "rascalrunner.app:main"

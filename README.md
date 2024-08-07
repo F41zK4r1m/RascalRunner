@@ -7,7 +7,7 @@ more info tbd
 ```
 # python3 -m venv venv
 # pip install -r requirements.txt
-# python3 app/rascalrunner.py -a "GITHUB_AUTH_TOKEN" -r "nopcorn/rascalrunner" -w /path/to/workflow/yaml
+# python3 rascalrunner/app.py -a "GITHUB_AUTH_TOKEN" -r "nopcorn/rascalrunner" -w /path/to/workflow/yaml
 ```
 
 ## Todo

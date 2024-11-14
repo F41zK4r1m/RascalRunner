@@ -6,7 +6,7 @@ RascalRunner is a command-line red teaming tool designed to deploy malicious wor
 
 It creates a temporary branch, uploads your workflow file, gets it executed, captures the logs, and then automatically cleans up all artifacts - including the temporary branch, workflow runs, and any deployments. This makes it ideal for testing runner-based attacks, secrets leaking, or OIDC abuse without alerting blue team to your actions. 
 
-Check out the sister repository, RascalRunner Workflows, for some example workflows. Please keep in mind that RascalRunner is an advanced tool and you can easily mess up deployment and get caught if you don't know what you're doing.
+Check out the sister repository, [RascalRunner-Workflows](https://github.com/nopcorn/RascalRunner-Workflows), for some example workflows. Please keep in mind that RascalRunner is an advanced tool and you can easily mess up deployment and get caught if you don't know what you're doing.
 
 ## Features
 

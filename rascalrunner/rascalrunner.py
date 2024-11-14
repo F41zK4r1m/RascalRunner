@@ -123,7 +123,7 @@ class RascalRunner:
 
 
     def _wait_for_workflow(self):
-        gh_repo = self._github_wrapper.github.get_repo(self._target) # different from self._repo, bound to github api
+        gh_repo = self._github_wrapper.github.get_repo(self._target)
         while True:
             # once we find a single workflow run, we know the code correctly kicked off a run and remove the branch remotely
             logging.debug(f"Waiting for workflow job to get kicked off")

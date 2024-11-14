@@ -30,10 +30,10 @@ def main():
     subparsers = parser.add_subparsers(dest='mode', help='Operating mode')
     
     recon_parser = subparsers.add_parser('recon', help='Analyze a GitHub token for access and permissions')
+    recon_parser.add_argument("-v", "--verbose", help="Tell me what that little rascal is doing", action="store_true")
     recon_parser.add_argument("-a", "--auth", help="Github authentication token to run the recon with", required=True)
     recon_parser.add_argument("--show-all", help="Show all possible target repositories, even if the PAT doesn't have the right permissions", action="store_true")
-    recon_parser.add_argument("-v", "--verbose", help="Tell me what that little rascal is doing", action="store_true")
-    
+
     run_parser = subparsers.add_parser('run', help='Run and test a workflow')
     run_parser.add_argument("-v", "--verbose", help="Tell me what that little rascal is doing.", action="store_true")
     run_parser.add_argument("-a", "--auth", help="Github authentication token. Used to clone the repository and remove the workflow run.", required=True)

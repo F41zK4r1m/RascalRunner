@@ -5,8 +5,9 @@ import re
 import time
 
 class GithubWrapper:
-    def __init__(self, token):
+    def __init__(self, token, mode):
         self._token = token
+        self.mode = mode
 
         # _login() will set up the Github object
         self._github, self._token_scopes = self._login()
@@ -24,7 +25,6 @@ class GithubWrapper:
         self.session = requests.Session()
         self.session.headers.update(self.config['headers'])
 
-
     @property
     def github(self):
         return self._github
@@ -35,9 +35,11 @@ class GithubWrapper:
 
     @token.setter
     def token(self, token):
-        pattern = r"^ghp_[a-zA-Z0-9]{36}$"
-        if not re.match(pattern, token):
-            raise Exception("Token provided doesn't seem to be valid. It should match {pattern}.")
+        classic_pattern = r"^ghp_[a-zA-Z0-9]{36}$"
+        fine_grained_pattern = r"^github_pat_[a-zA-Z0-9_]{82}$"
+        
+        if not (re.match(classic_pattern, token) or re.match(fine_grained_pattern, token)):
+            raise Exception("Token provided doesn't seem to be valid. It should be either a classic PAT or a fine-grained PAT.")
         self._token = token
 
     def _login(self):
@@ -51,9 +53,17 @@ class GithubWrapper:
         gh.get_rate_limit()
 
         oauth_scopes = gh.oauth_scopes
-        if "repo" not in oauth_scopes:
+        
+        # check if we're using a fine-grained token (which returns None for oauth_scopes)
+        if oauth_scopes is None or len(oauth_scopes) == 0:
+            logging.debug("Using fine-grained PAT - skipping OAuth scope validation")
+            self._token_scope = []
+            self._github = gh
+            return gh, []
+        
+        if "repo" not in oauth_scopes and self.mode == "run":
             raise Exception(f"Repo access isn't allowed with the provided token. RascalRunner won't work with this token.")
-        elif "workflow" not in oauth_scopes:
+        elif "workflow" not in oauth_scopes and self.mode == "run":
             raise Exception(f"Workflow access isn't allowed with the provided token. RascalRunner won't be able to pull logs or clean up the workflow run. RascalRunner won't work with this token.")
         
         logging.debug("Login to Github successful")

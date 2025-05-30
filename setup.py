@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="rascalrunner",
-    version="0.1.0",
+    version="0.2.0",
     author="nopcorn",
     author_email="",
     description="A red team tool to leverage Github workflows and self-hosted runners",

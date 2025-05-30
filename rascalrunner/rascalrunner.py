@@ -1,7 +1,5 @@
 import tempfile
 import logging
-import random
-import string
 import shutil
 import yaml
 import time
@@ -13,10 +11,12 @@ from git import Repo, Actor
 
 class RascalRunner:
 
-    def __init__(self, target, workflow, wrapper):
+    def __init__(self, target, workflow, wrapper, branch_name, commit_message, only_delete_logs):
         self._target = target
         self._workflow = workflow
-        self._branch_name = f"lint-testing-{''.join(random.choice(string.ascii_letters) for i in range(5))}"
+        self._branch_name = branch_name
+        self._commit_message = commit_message
+        self._only_delete_logs = only_delete_logs
         self._github_wrapper = wrapper
 
     @property
@@ -61,6 +61,7 @@ class RascalRunner:
         branch = self._repo.create_head(self._branch_name).checkout()
         self._branch = branch
 
+        # remove existing workflows to make sure we don't trigger anything
         shutil.rmtree(f"{self._tmp_dir.name}/.github/workflows/")
         self._repo.index.remove([f"{self._tmp_dir.name}/.github/workflows/"], working_tree=True, r=True)
         os.mkdir(f"{self._tmp_dir.name}/.github/workflows/")
@@ -75,7 +76,7 @@ class RascalRunner:
         actor = Actor(last_author_name, last_author_email)
 
         self._repo.git.add(f".github/workflows/{workflow_basename}")
-        self._repo.index.commit("testing out new linter workflow", author=actor, committer=actor)
+        self._repo.index.commit(self._commit_message, author=actor, committer=actor)
 
         remote = self._repo.remote("origin")
         remote.push(refspec=f"{self._branch_name}:{self._branch_name}", set_upstream=True)
@@ -138,8 +139,15 @@ class RascalRunner:
                     if run.status == "completed":
                         logging.info(f"Job completed")
                         self._download_run_logs(run.logs_url)
-                        run.delete()
-                        logging.info(f"Removed workflow from the github UI")
+                        if self._only_delete_logs:
+                            resp = self._github_wrapper.api_call("DELETE", run.logs_url)
+                            if resp.status_code != 204:
+                                logging.info(f"Could not remove run logs - please clean up manually")
+                            else:
+                                logging.info(f"Removed run logs")
+                        else:
+                            run.delete()
+                            logging.info(f"Removed workflow and logs from the github UI")
                         return
 
 

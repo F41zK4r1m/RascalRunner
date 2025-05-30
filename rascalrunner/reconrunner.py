@@ -19,9 +19,9 @@ class ReconRunner:
             response = self.wrapper.api_call('GET', 'https://api.github.com/user')
             if response.status_code == 200:
                 user_data = response.json()
-                owner_string = f"{user_data['name']} (@{user_data['login']})"
-                account_type_string = f"{user_data['type']}"
-                mfa_string = f"{'Yes' if user_data['two_factor_authentication'] else 'No'}"
+                owner_string = f"{user_data.get('name')} (@{user_data.get('login')})"
+                account_type_string = f"{user_data.get('type')}"
+                mfa_string = f"{'Yes' if user_data.get('two_factor_authentication') else 'No'}"
             else:
                 owner_string = account_type_string = mfa_string = f"Error fetching information (HTTP status_code {response.status_code})"
 
@@ -30,14 +30,14 @@ class ReconRunner:
                 emails = response.json()
                 email_string = f"{', '.join(email['email'] for email in emails)}"
             else:
-                email_string = f"Error fetching information (HTTP status_code {response.status_code})"
+                email_string = f"Error fetching email info (HTTP status_code {response.status_code})"
 
             response = self.wrapper.api_call('GET', 'https://api.github.com/user/orgs')
             if response.status_code == 200:
                 orgs = response.json()
                 orgs_string = f"{', '.join(org['login'] for org in orgs)}"
             else:
-                orgs_string = f"Error fetching information (HTTP status_code {response.status_code})"
+                orgs_string = f"Error fetching org info (HTTP status_code {response.status_code})"
             
             table.add_row("Owner", owner_string)
             table.add_row("Account Type", account_type_string)
@@ -57,8 +57,9 @@ class ReconRunner:
 
     def print_repo_table(self):
         console = Console()
-        table = Table(title="\nRepository Targets (at minimum push permissions)", title_justify="left", box=box.SQUARE)
+        table = Table(title="\nRepository Targets", title_justify="left", box=box.SQUARE)
         table.add_column("Target", justify="left", no_wrap=True)
+        table.add_column("Status", justify="left", no_wrap=True)
         table.add_column("Permission(s)", justify="left", no_wrap=True)
         table.add_column("Num Secrets", justify="left", no_wrap=True)
         table.add_column("Num Runs", justify="left", no_wrap=True)
@@ -75,11 +76,15 @@ class ReconRunner:
                     has_next = True if "next" in response.links else False
 
                     for repo in repos:
-                        if repo['archived']: continue  # skip archived repos
-                        if not repo['permissions']['push'] and not self.show_all: 
-                            continue  # without push we can't do much
+                        if not self.show_all and list(perm for perm, has_perm in repo['permissions'].items() if has_perm) == ['pull'] and not repo['private']:
+                            continue
                         
                         live.update(f"Processing {repo['full_name']}...")
+
+                        # Determine status based on private and archived flags
+                        status = "Private" if repo['private'] else "Public"
+                        if repo['archived']:
+                            status += ", Archived"
 
                         permissions = ", ".join([perm for perm, has_perm in repo['permissions'].items() if has_perm])
 
@@ -100,21 +105,21 @@ class ReconRunner:
                         if response.status_code == 200:
                             num_secrets = response.json().get('total_count')
 
-                        if runs_count != 0 or num_secrets != 0:
-                            table.add_row(
-                                repo['full_name'],
-                                permissions,
-                                str(num_secrets),
-                                str(runs_count),
-                                last_run_string
-                            )
+                        table.add_row(
+                            repo['full_name'],
+                            status,
+                            permissions,
+                            str(num_secrets),
+                            str(runs_count),
+                            last_run_string
+                        )
                             
                     if not has_next:
                         live.update("")
                         break
                     page += 1
             
-            console.clear()
+            #console.clear()
             console.print(table)
                 
         except Exception as e:

@@ -10,16 +10,19 @@ Check out the sister repository, [RascalRunner-Workflows](https://github.com/nop
 
 ## Features
 
-- Given a PAT, finds repositories you should focus on for pipeline exploitation by checking for available secrets, permissions, and runs
+- Given a PAT (classic or fine-grained), finds repositories you should focus on for pipeline exploitation by checking for available secrets, permissions, and runs
 - Uploads a workflow file and kick off a malicious run covertly on a temporary branch
 - Automatically downloads run logs when the run completes
-- Automatically cleans up evidence of the run, and removes potential deployments the event generated
+- Automatically cleans up evidence of the run, and removes potential deployments the event generated. Also supports only removing run logs but leaving the workflow to avoid some blue team detections.
 
 Github actions are complex enough that if the `recon` or `run` steps fail, it doesn't mean you're cooked. There are also many ways to still mess up a deployment via RascalRunner and get caught by defenders. Be sure you understand the existing workflows in the repository you're targeting and look for clues to security and alerting measures in place.
 
 ## Install
 
 ```
+mkdir working && cd working
+python -m venv venv
+source venv/bin/activate
 pip install rascalrunner
 ```
 
@@ -30,28 +33,38 @@ Use in recon mode if you've found a Github PAT but are unsure how to leverage it
 ```shell
 $ rascalrunner recon --auth GITHUB_PAT
 
-Token Information
+Token Information                                                                             
 ┌────────────────┬───────────────────────────────────────────────────────────────────────────┐
 │ Key            │ Value                                                                     │
 ├────────────────┼───────────────────────────────────────────────────────────────────────────┤
 │ Owner          │ nopcorn (@nopcorn)                                                        │
 │ Account Type   │ User                                                                      │
 │ 2FA Configured │ Yes                                                                       │
-│ Email(s)       │ lol@lol.com, lol+nopcorn@users.noreply.github.com                         │
-│ Org(s)         │ figment-networks, BlockchainSecurityStandardsCouncil                      │
+│ Email(s)       │ lol@lol.com, 143365389+nopcorn@users.noreply.github.com                   │
+│ Org(s)         │ testorg                                                                   │
 │ Token Scopes   │ repo, user, workflow                                                      │
 └────────────────┴───────────────────────────────────────────────────────────────────────────┘
-
-Repository Targets (at minimum push permissions)
-┌────────────────────────────────────┬─────────────────────────────────────┬─────────────┬──────────┬──────────────────────────────────────────────────────────────┐
-│ Target                             │ Permission(s)                       │ Num Secrets │ Num Runs │ Last Run Info                                                │
-├────────────────────────────────────┼─────────────────────────────────────┼─────────────┼──────────┼──────────────────────────────────────────────────────────────┤
-│ nopcorn/env_test                   │ admin, maintain, push, triage, pull │ 0           │ 10       │ Update env.yaml (Deploy Test) - 2024-10-31T11:40:45Z         │
-│ nopcorn/force-push-test            │ admin, maintain, push, triage, pull │ 0           │ 8        │ test (test linter) - 2024-08-29T23:38:59Z                    │
-│ nopcorn/githubaudit-vulnerablerepo │ admin, maintain, push, triage, pull │ 1           │ 0        │                                                              │
-│ nopcorn/malicious-workflow-test    │ admin, maintain, push, triage, pull │ 1           │ 34       │ Test  (Test prior to running linter) - 2024-08-28T18:42:56Z  │
-│ nopcorn/nopcorn.github.io          │ admin, maintain, push, triage, pull │ 0           │ 23       │ pages build and deployment (too long) - 2024-07-18T21:02:32Z │
-└────────────────────────────────────┴─────────────────────────────────────┴─────────────┴──────────┴──────────────────────────────────────────────────────────────┘
+                                                                                                                                                                                                                     
+Repository Targets                                                                                                                                                                                                                          
+┌──────────────────────────────────────────────────────┬───────────────────┬─────────────────────────────────────┬─────────────┬──────────┬────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Target                                               │ Status            │ Permission(s)                       │ Num Secrets │ Num Runs │ Last Run Info                                                                                  │
+├──────────────────────────────────────────────────────┼───────────────────┼─────────────────────────────────────┼─────────────┼──────────┼────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ nopcorn/artifact-exploit-poc                         │ Public            │ admin, maintain, push, triage, pull │ 0           │ 27       │ Vulnerable Workflow (Vulnerable Workflow) - 2025-05-27T00:01:33Z                               │
+│ nopcorn/auto-merge-test                              │ Private, Archived │ admin, maintain, push, triage, pull │ 0           │ 0        │                                                                                                │
+│ nopcorn/CuteRAT                                      │ Public            │ admin, maintain, push, triage, pull │ 0           │ 0        │                                                                                                │
+│ nopcorn/DuckDuckC2                                   │ Public            │ admin, maintain, push, triage, pull │ 0           │ 0        │                                                                                                │
+│ nopcorn/env_test                                     │ Public            │ admin, maintain, push, triage, pull │ 0           │ 10       │ Update env.yaml (Deploy Test) - 2024-10-31T11:40:45Z                                           │
+│ nopcorn/gha-intercept                                │ Public            │ admin, maintain, push, triage, pull │ 0           │ 0        │                                                                                                │
+│ nopcorn/githubaudit                                  │ Public            │ admin, maintain, push, triage, pull │ 0           │ 0        │                                                                                                │
+│ nopcorn/githubaudit-vulnerablerepo                   │ Public            │ admin, maintain, push, triage, pull │ 1           │ 0        │                                                                                                │
+│ nopcorn/hacktricks-cloud                             │ Public            │ admin, maintain, push, triage, pull │ 0           │ 0        │                                                                                                │
+│ nopcorn/nopcorn                                      │ Public            │ admin, maintain, push, triage, pull │ 0           │ 0        │                                                                                                │
+│ nopcorn/nopcorn.github.io                            │ Public            │ admin, maintain, push, triage, pull │ 0           │ 20       │ pages build and deployment (pages build and deployment) - 2025-05-27T00:54:15Z                 │
+│ nopcorn/RascalRunner                                 │ Public            │ admin, maintain, push, triage, pull │ 0           │ 0        │                                                                                                │
+│ nopcorn/RascalRunner-Workflows                       │ Public            │ admin, maintain, push, triage, pull │ 0           │ 0        │                                                                                                │
+│ nopcorn/redteam-stuff                                │ Private           │ admin, maintain, push, triage, pull │ 0           │ 51       │ try out linter temporarily (Test prior to running linter) - 2024-05-28T14:59:35Z               │
+│ nopcorn/workflow-test                                │ Private           │ admin, maintain, push, triage, pull │ 1           │ 24       │ deploy (deploy) - 2025-05-30T14:07:55Z                                                         │
+└──────────────────────────────────────────────────────┴───────────────────┴─────────────────────────────────────┴─────────────┴──────────┴────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 When you've found a target, invoke the `run` mode and supply a malicious workflow for inclusion into the remote target
@@ -80,10 +93,7 @@ Remember that failed runs will automatically send an email to Github repository 
     - find secrets in environments without protection rules
     - allow for injecting a workflow in an environment from the command line
 - add job and workflow ids to verbose logging
-- make the temporary branch name configurable
 - allow renaming the workflow file from the command line
-- allow for customized commit messages
-- implement double commits to make it a bit harder to find the malicious code
 - support a max run time before the RascalRunner will kill the run
 
 ## Contributing

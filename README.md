@@ -92,14 +92,14 @@ Remember that failed runs will automatically send an email to Github repository 
 RascalRunner also supports GitLab instances for reconnaissance operations. Use the `glrecon` command to analyze GitLab projects and tokens:
 
 ```shell
-$ rascalrunner glrecon --gitlab-url https://gitlab.example.com --auth GITLAB_TOKEN --show-all
+$ rascalrunner glrecon --gitlab-url https://gitlab.example.com/api/v4 --auth GITLAB_TOKEN
 ```
 
 The `--gitlab-url` parameter specifies the GitLab instance URL (use https://gitlab.com for the public GitLab instance). The `--show-all` flag displays comprehensive information including all accessible projects and detailed permissions.
 
 The output will show token information, accessible projects, and permission levels, helping identify potential targets for pipeline exploitation. The permissions output includes project access levels, group memberships, and available CI/CD variables.
 
-![glrecon example](./docs/glrecon_example.png)
+<img width="849" height="457" alt="image" src="https://github.com/user-attachments/assets/6935c0eb-2351-4f32-aece-9152fd998344" />
 
 ## Some improvements to come
 
